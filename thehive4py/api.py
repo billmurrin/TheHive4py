@@ -1,4 +1,3 @@
-<<<<<<< b2103695180b54829a5317566415b538735b208e
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -326,10 +325,31 @@ class TheHiveApi:
             response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
             json_response = response.json()
 
+            print(json_response)
             if response.status_code == 201 and len(json_response) > 0:
                 return json_response
             else:
                 sys.exit("Error: {}".format("Unable to create the case template"))
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+    def delete_case_template(self, caseId):
+
+        """
+        :param fieldId: Case template Id to delete
+        :rtype: bool
+        """
+
+        req = self.url + "/api/case/template/{}".format(caseId)
+
+        try:
+            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 200 or response.status_code == 204:
+                return True
+            else:
+                sys.exit("Error: {}".format("Error when attempting to delete case template."))
+
         except requests.exceptions.RequestException as e:
             sys.exit("Error: {}".format(e))
 
