@@ -223,7 +223,6 @@ class CaseObservable(JSONSerializable):
 
 
 class CaseCustomField(JSONSerializable):
-
     def __init__(self, **attributes):
         if attributes.get('json', False):
             attributes = attributes['json']
