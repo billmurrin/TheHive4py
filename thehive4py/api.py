@@ -323,13 +323,13 @@ class TheHiveApi:
         data = case_template.jsonify()
 
         try:
-            response = requests.post(req, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
             json_response = response.json()
 
-            if response.status_code == 200 and len(json_response) > 0:
-                return response.json()[0]
+            if response.status_code == 201 and len(json_response) > 0:
+                return json_response
             else:
-                sys.exit("Error: {}".format("Unable to create the case templates"))
+                sys.exit("Error: {}".format("Unable to create the case template"))
         except requests.exceptions.RequestException as e:
             sys.exit("Error: {}".format(e))
 
