@@ -266,3 +266,13 @@ class AlertArtifact(JSONSerializable):
             encoded_string = base64.b64encode(file_artifact.read())
 
         return "{};{};{}".format(filename, mime, encoded_string.decode())
+
+
+class CaseMetric(JSONSerializable):
+    def __init__(self, **attributes):
+        if attributes.get('json', False):
+            attributes = attributes['json']
+
+        self.name = self.attr(attributes, 'name', None, 'Missing metric name')
+        self.title = self.attr(attributes, 'title', None, 'Missing metric title')
+        self.description = self.attr(attributes, 'description', None, 'Missing metric description')
