@@ -334,14 +334,15 @@ class TheHiveApi:
 
         req = self.url + "/api/list/custom_fields/_exists"
 
-	data = {
-	    "key": "reference",
-            "value": custom_field.reference   
-	}
+        data = {
+            "key": "reference",
+            "value": custom_field.reference
+        }
         
         try:
-            response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
-	    json_response = response.json()
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data,
+                                     proxies=self.proxies, auth=self.auth, verify=self.cert)
+            json_response = response.json()
 
             if response.status_code == 200 and len(json_response) > 0:
                 exists = response.json()
@@ -351,10 +352,10 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             sys.exit("Error: {}".format(e))
         
-	if exists['found'] == True:
-	    sys.exit("Cannot create custom field. The custom field reference already exists.")
+        if exists['found']:
+            sys.exit("Cannot create custom field. The custom field reference already exists.")
         else:
-	    req = self.url + "/api/list/custom_fields"
+            req = self.url + "/api/list/custom_fields"
 
             data = {
                 "value": {
@@ -384,8 +385,8 @@ class TheHiveApi:
         :param fieldId: Custom field Id to delete
         :rtype: bool
         """
-	
-	req = self.url + "/api/list/{}".format(fieldId)
+
+        req = self.url + "/api/list/{}".format(fieldId)
 
         try:
             response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
