@@ -149,6 +149,16 @@ class CaseObservable(JSONSerializable):
             self.data = data
 
 
+class CaseMetric(JSONSerializable):
+    def __init__(self, **attributes):
+        if attributes.get('json', False):
+            attributes = attributes['json']
+
+        self.name = self.attr(attributes, 'name', None, 'Missing metric name')
+        self.title = self.attr(attributes, 'title', None, 'Missing metric title')
+        self.description = self.attr(attributes, 'description', None, 'Missing metric description')
+
+
 class Alert(JSONSerializable):
     def __init__(self, **attributes):
         if attributes.get('json', False):
