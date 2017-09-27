@@ -309,6 +309,29 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             sys.exit("Error: {}".format(e))
 
+    def create_case_template(self, case_template):
+
+        """
+        :param case_template: TheHive Case Template
+        :return: TheHive case template Id
+        :rtype: string
+
+        """
+
+        req = self.url + "/api/case/template"
+        data = case_template.jsonify()
+
+        try:
+            response = requests.post(req, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+            json_response = response.json()
+
+            if response.status_code == 200 and len(json_response) > 0:
+                return response.json()[0]
+            else:
+                sys.exit("Error: {}".format("Unable to create the case templates"))
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
     def get_task_logs(self, taskId):
 
         """
