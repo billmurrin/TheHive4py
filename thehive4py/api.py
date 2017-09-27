@@ -301,6 +301,59 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             sys.exit("Error: {}".format(e))
 
+    def create_metric(self, metric):
+
+        """
+        :param metric: TheHive metric
+        :type metric: Metric defined in models.py
+        :return: TheHive metric
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/metrics"
+
+        data = {
+            "value": {
+                "name": metric.name,
+                "title": metric.title,
+                "description": metric.description,
+            }
+        }
+
+        try:
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies,
+                                     auth=self.auth, verify=self.cert)
+            json_response = response.json()
+
+            if response.status_code == 200 and len(json_response) > 0:
+                return response.json()
+            else:
+                sys.exit("Error: {}".format("Unable to create metric."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+    def delete_metric(self, metricId):
+
+        """
+        :param metricId: Metric Id to delete
+        :return: response
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/{}".format(metricId)
+
+        try:
+            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 200 or response.status_code == 204:
+                return True
+            else:
+                sys.exit("Error: {}".format("Error when attempting to remove metric."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
     def create_alert(self, alert):
 
         """
