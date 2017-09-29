@@ -117,20 +117,20 @@ class TheHiveApi:
             sys.exit("Error: {}".format(e))
 
 
-    def update_case_task(self, task):
+    def update_case_task(self, task_id, task):
         """
         :Updates TheHive Task
         :param case: The task to update. The task's `id` determines which Task to update.
         :return:
         """
-        req = self.url + "/api/case/task/{}".format(task.id)
+        req = self.url + "/api/case/task/{}".format(task_id)
 
         # Choose which attributes to send
         update_keys = [
             'title', 'description', 'status', 'order', 'user', 'owner', 'flag', 'endDate'
         ]
 
-        data = {k: v for k, v in case.__dict__.items() if k in update_keys}
+        data = {k: v for k, v in task.__dict__.items() if k in update_keys}
 
         try:
             return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data,
