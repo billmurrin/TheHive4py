@@ -103,14 +103,17 @@ class TheHiveApi:
         :param case: The case to update. The case's `id` determines which case to update.
         :return:
         """
-        req = self.url + "/api/case/{}".format(case.id)
+        req = self.url + "/api/case/{}".format(case['id'])
 
         # Choose which attributes to send
         update_keys = [
             'title', 'description', 'severity', 'startDate', 'owner', 'flag', 'tlp', 'tags', 'resolutionStatus',
-            'impactStatus', 'summary', 'endDate', 'metrics'
+            'impactStatus', 'summary', 'endDate', 'metrics', 'status',
         ]
-        data = {k: v for k, v in case.__dict__.items() if k in update_keys}
+        # data = {k: v for k, v in case.__dict__.items() if k in update_keys}
+        data = {k: v for k, v in case.iteritems() if k in update_keys}
+
+        print(data)
 
         try:
             return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
