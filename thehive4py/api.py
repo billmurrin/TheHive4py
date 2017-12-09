@@ -13,6 +13,7 @@ import requests
 from requests.auth import AuthBase
 
 from thehive4py.models import CaseHelper
+from thehive4py.query import *
 
 
 class BearerAuth(AuthBase):
@@ -103,7 +104,7 @@ class TheHiveApi:
         :param case: The case to update. The case's `id` determines which case to update.
         :return:
         """
-        req = self.url + "/api/case/{}".format(case['id'])
+        req = self.url + "/api/case/{}".format(case.id)
 
         # Choose which attributes to send
         update_keys = [
@@ -112,8 +113,6 @@ class TheHiveApi:
         ]
         # data = {k: v for k, v in case.__dict__.items() if k in update_keys}
         data = {k: v for k, v in case.iteritems() if k in update_keys}
-
-        print(data)
 
         try:
             return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
@@ -256,25 +255,14 @@ class TheHiveApi:
         }
 
         # Add body
-        criteria = [{
-            "_parent": {
-                "_type": "case",
-                "_query": {
-                    "_id": case_id
-                }
-            }
-        }, {
-            "status": "Ok"
-        }]
+        criteria = [Parent('case', Id(case_id)), Eq('status', 'Ok')]
 
         # Append the custom query if specified
         if "query" in attributes:
             criteria.append(attributes["query"])
 
         data = {
-            "query": {
-                "_and": criteria
-            }
+            "query": And(criteria)
         }
 
         try:
@@ -292,23 +280,11 @@ class TheHiveApi:
         }
 
         # Add body
-        parent_criteria = {
-            '_parent': {
-                '_type': 'case',
-                '_query': {
-                    '_id': case_id
-                }
-            }
-        }
+        parent_criteria = Parent('case', Id(case_id))
 
         # Append the custom query if specified
         if "query" in attributes:
-            criteria = {
-                "_and": [
-                    parent_criteria,
-                    attributes["query"]
-                ]
-            }
+            criteria = And(parent_criteria, attributes["query"])
         else:
             criteria = parent_criteria
 
@@ -332,14 +308,7 @@ class TheHiveApi:
 
         req = self.url + "/api/case/template/_search"
         data = {
-            "query": {
-                "_and": [{
-                    "_field": "name",
-                    "_value": name
-                }, {
-                    "status": "Ok"
-                }]
-            }
+            "query": And(Eq("name", name), Eq("status", "Ok"))
         }
 
         try:
@@ -495,7 +464,7 @@ class TheHiveApi:
         :rtype: json
         """
 
-        req = self.url + "/api/list/metrics"
+        req = self.url + "/api/list/case_metrics"
 
         data = {
             "value": {
