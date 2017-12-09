@@ -392,7 +392,7 @@ class TheHiveApi:
 
         data = {
             "key": "reference",
-            "value": custom_field.reference
+            "value": custom_field['reference']
         }
 
         try:
@@ -415,11 +415,11 @@ class TheHiveApi:
 
             data = {
                 "value": {
-                    "name": custom_field.name,
-                    "reference": custom_field.reference,
-                    "description": custom_field.description,
-                    "type": custom_field.type,
-                    "options": custom_field.options
+                    "name": custom_field['name'],
+                    "reference": custom_field['reference'],
+                    "description": custom_field['description'],
+                    "type": custom_field['type'],
+                    "options": custom_field['options']
                 }
             }
 
