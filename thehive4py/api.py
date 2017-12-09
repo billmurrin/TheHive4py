@@ -366,7 +366,6 @@ class TheHiveApi:
         try:
             response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
             json_response = response.json()
-            print(json_response)
 
             if response.status_code == 201 and len(json_response) > 0:
                 return json_response
