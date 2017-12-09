@@ -113,8 +113,6 @@ class TheHiveApi:
         # data = {k: v for k, v in case.__dict__.items() if k in update_keys}
         data = {k: v for k, v in case.iteritems() if k in update_keys}
 
-        print(data)
-
         try:
             return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
@@ -368,6 +366,7 @@ class TheHiveApi:
         try:
             response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
             json_response = response.json()
+            print(json_response)
 
             if response.status_code == 201 and len(json_response) > 0:
                 return json_response
@@ -495,7 +494,7 @@ class TheHiveApi:
         :rtype: json
         """
 
-        req = self.url + "/api/list/metrics"
+        req = self.url + "/api/list/case_metrics"
 
         data = {
             "value": {
