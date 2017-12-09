@@ -34,6 +34,36 @@ class JSONSerializable(object):
             return attributes.get(name, default)
 
 
+class CustomFieldHelper(object):
+    def __init__(self):
+        self.fields = {}
+
+    def __add_field(self, type, name, value):
+        custom_field = dict()
+        custom_field['order'] = len(self.fields)
+        custom_field[type] = value
+        self.fields[name] = custom_field
+
+    def add_date(self, name, value):
+        self.__add_field('date', name, value)
+        return self
+
+    def add_string(self, name, value):
+        self.__add_field('string', name, value)
+        return self
+
+    def add_boolean(self, name, value):
+        self.__add_field('boolean', name, value)
+        return self
+
+    def add_number(self, name, value):
+        self.__add_field('number', name, value)
+        return self
+
+    def build(self):
+        return self.fields
+
+
 class Case(JSONSerializable):
 
     def __init__(self, **attributes):
@@ -47,33 +77,18 @@ class Case(JSONSerializable):
             'startDate': int(time.time()) * 1000,
             'metrics': {},
             'customFields': {},
-            'tasks': []
+            'tasks': [],
+            'template': None
         }
-
-        is_from_template = attributes.get('template', False)
-        if is_from_template:
-            template = attributes['template']
-            defaults = {
-                'title': None,
-                'description': template.description,
-                'tlp': template.tlp,
-                'severity': template.severity,
-                'flag': template.flag,
-                'tags': template.tags,
-                'startDate': int(time.time()) * 1000,
-                'metrics': dict((el, None) for el in template.metricNames),
-                'customFields': template.customFields,
-                'tasks': template.tasks
-            }
 
         if attributes.get('json', False):
             attributes = attributes['json']
 
+        is_from_template = attributes.get('template', False)
         if is_from_template:
-            self.title = '[{}] {}'.format(template.titlePrefix, attributes.get('title', None)) if template.titlePrefix else attributes.get('title', None)
-        else:
-            self.title = attributes.get('title', None)
+            defaults['template'] = attributes['template']
 
+        self.title = attributes.get('title', None)
         self.description = attributes.get('description', defaults['description'])
         self.tlp = attributes.get('tlp', defaults['tlp'])
         self.severity = attributes.get('severity', defaults['severity'])
@@ -82,6 +97,7 @@ class Case(JSONSerializable):
         self.startDate = attributes.get('startDate', defaults['startDate'])
         self.metrics = attributes.get('metrics', defaults['metrics'])
         self.customFields = attributes.get('customFields', defaults['customFields'])
+        self.template = attributes.get('template', defaults['template'])
 
         tasks = attributes.get('tasks', defaults['tasks'])
         self.tasks = []
@@ -124,8 +140,14 @@ class CaseHelper:
             case = Case(json=data)
 
             # Add attributes that are not added by the constructor
-            case.id = data['id']
-            case.owner = data['owner']
+            case.id = data.get('id', None)
+            case.owner = data.get('owner', None)
+            case.caseId = data.get('caseId', None)
+            case.status = data.get('status', None)
+            case.createdAt = data.get('createdAt', None)
+            case.createdBy = data.get('createdBy', None)
+            case.updatedAt = data.get('updatedAt', None)
+            case.updatedBy = data.get('updatedBy', None)
 
             return case
 
@@ -193,7 +215,7 @@ class CaseTemplate(JSONSerializable):
         self.flag = attributes.get('flag', False)
         self.tlp = attributes.get('tlp', 2)
         self.tags = attributes.get('tags', [])
-        self.metrics = attributes.get('metrics', [])
+        self.metrics = attributes.get('metrics', {})
         self.customFields = attributes.get('customFields', {})
 
         tasks = attributes.get('tasks', [])
@@ -220,18 +242,6 @@ class CaseObservable(JSONSerializable):
             self.data = [{'attachment': (os.path.basename(data[0]), open(data[0], 'rb'), magic.Magic(mime=True).from_file(data[0]))}]
         else:
             self.data = data
-
-
-class CaseCustomField(JSONSerializable):
-    def __init__(self, **attributes):
-        if attributes.get('json', False):
-            attributes = attributes['json']
-
-        self.name = self.attr(attributes, 'name', None, 'Missing custom field name')
-        self.reference = self.attr(attributes, 'reference', None, 'Missing custom field reference')
-        self.description = self.attr(attributes, 'description', None, 'Missing custom field description')
-        self.type = self.attr(attributes, 'type', None, 'Missing custom field type')
-        self.options = attributes.get('options', [])
 
 
 class CaseMetric(JSONSerializable):
