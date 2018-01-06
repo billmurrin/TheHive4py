@@ -38,6 +38,17 @@ class CustomFieldHelper(object):
     def __init__(self):
         self.fields = {}
 
+    @staticmethod
+    def create_new_field(type, name, value=[], reference='', description=''):
+        custom_field = dict()
+        custom_field['name'] = name
+        custom_field['type'] = type
+        custom_field['options'] = value
+        custom_field['reference'] = reference
+        custom_field['description'] = description
+
+        return custom_field
+
     def __add_field(self, type, name, value):
         custom_field = dict()
         custom_field['order'] = len(self.fields)
@@ -243,6 +254,16 @@ class CaseObservable(JSONSerializable):
             self.data = [{'attachment': (os.path.basename(data[0]), open(data[0], 'rb'), magic.Magic(mime=True).from_file(data[0]))}]
         else:
             self.data = data
+
+
+class CaseMetric(JSONSerializable):
+    def __init__(self, **attributes):
+        if attributes.get('json', False):
+            attributes = attributes['json']
+
+        self.name = self.attr(attributes, 'name', None, 'Missing metric name')
+        self.title = self.attr(attributes, 'title', None, 'Missing metric title')
+        self.description = self.attr(attributes, 'description', None, 'Missing metric description')
 
 
 class Alert(JSONSerializable):

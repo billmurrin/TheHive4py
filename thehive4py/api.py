@@ -105,18 +105,19 @@ class TheHiveApi:
         :param case: The case to update. The case's `id` determines which case to update.
         :return:
         """
-        req = self.url + "/api/case/{}".format(case.id)
+        req = self.url + "/api/case/{}".format(case['id'])
 
         # Choose which attributes to send
         update_keys = [
             'title', 'description', 'severity', 'startDate', 'owner', 'flag', 'tlp', 'tags', 'resolutionStatus',
-            'impactStatus', 'summary', 'endDate', 'metrics'
+            'impactStatus', 'summary', 'endDate', 'metrics', 'status', 'customFields', 'metrics'
         ]
-        data = {k: v for k, v in case.__dict__.items() if k in update_keys}
+        # data = {k: v for k, v in case.__dict__.items() if k in update_keys}
+        data = {k: v for k, v in case.iteritems() if k in update_keys}
 
         try:
             return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestExceptiona as e:
             raise CaseException("Case update error: {}".format(e))
 
     def create_case_task(self, case_id, case_task):
@@ -137,6 +138,27 @@ class TheHiveApi:
             return requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
             raise CaseTaskException("Case task create error: {}".format(e))
+
+    def update_case_task(self, task_id, task):
+        """
+        :Updates TheHive Task
+        :param case: The task to update. The task's `id` determines which Task to update.
+        :return:
+        """
+        req = self.url + "/api/case/task/{}".format(task_id)
+
+        # Choose which attributes to send
+        update_keys = [
+            'title', 'description', 'status', 'order', 'user', 'owner', 'flag', 'endDate'
+        ]
+
+        data = {k: v for k, v in task.__dict__.items() if k in update_keys}
+
+        try:
+            return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data,
+                                  proxies=self.proxies, auth=self.auth, verify=self.cert)
+        except requests.exceptions.RequestException as e:
+            raise CaseTaskException("Case task update error: {}".format(e))
 
     def create_task_log(self, task_id, case_task_log):
 
@@ -248,7 +270,7 @@ class TheHiveApi:
         try:
             return requests.post(req, params=params, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            raise CaseObserableException("Case observables search error: {}".format(e))
+            raise CaseObservableException("Case observables search error: {}".format(e))
 
     def get_case_tasks(self, case_id, **attributes):
         req = self.url + "/api/case/task/_search"
@@ -302,6 +324,49 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise CaseTemplateException("Case template fetch error: {}".format(e))
 
+    def create_case_template(self, case_template):
+
+        """
+        :param case_template: TheHive Case Template
+        :return: TheHive case template Id
+        :rtype: string
+
+        """
+
+        req = self.url + "/api/case/template"
+        data = case_template.jsonify()
+
+        try:
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+            json_response = response.json()
+
+            if response.status_code == 201 and len(json_response) > 0:
+                return json_response
+            else:
+                sys.exit("Error: {}".format("Unable to create the case template"))
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+    def delete_case_template(self, caseId):
+
+        """
+        :param fieldId: Case template Id to delete
+        :rtype: bool
+        """
+
+        req = self.url + "/api/case/template/{}".format(caseId)
+
+        try:
+            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 200 or response.status_code == 204:
+                return True
+            else:
+                sys.exit("Error: {}".format("Error when attempting to delete case template."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
     def get_task_logs(self, taskId):
 
         """
@@ -316,6 +381,134 @@ class TheHiveApi:
             return requests.get(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
             raise CaseTaskException("Case task logs search error: {}".format(e))
+
+    def create_custom_field(self, custom_field):
+
+        """
+        :param custom_field: TheHive custom field
+        :type customfield: CustomField defined in models.py
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/custom_fields/_exists"
+
+        data = {
+            "key": "reference",
+            "value": custom_field['reference']
+        }
+
+        try:
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data,
+                                     proxies=self.proxies, auth=self.auth, verify=self.cert)
+            json_response = response.json()
+
+            if response.status_code == 200 and len(json_response) > 0:
+                exists = response.json()
+            else:
+                sys.exit("Error: {}".format("Unable to determine if custom field exists."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+        if exists['found']:
+            sys.exit("Cannot create custom field. The custom field reference already exists.")
+        else:
+            req = self.url + "/api/list/custom_fields"
+
+            data = {
+                "value": {
+                    "name": custom_field['name'],
+                    "reference": custom_field['reference'],
+                    "description": custom_field['description'],
+                    "type": custom_field['type'],
+                    "options": custom_field['options']
+                }
+            }
+
+            try:
+                response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+                json_response = response.json()
+
+                if response.status_code == 200 and len(json_response) > 0:
+                    return response.json()
+                else:
+                    sys.exit("Error: {}".format("Unable to create custom field."))
+
+            except requests.exceptions.RequestException as e:
+                sys.exit("Error: {}".format(e))
+
+    def delete_custom_field(self, fieldId):
+
+        """
+        :param fieldId: Custom field Id to delete
+        :rtype: bool
+        """
+
+        req = self.url + "/api/list/{}".format(fieldId)
+
+        try:
+            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 200 or response.status_code == 204:
+                return True
+            else:
+                sys.exit("Error: {}".format("Error when attempting to remove custom field."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+    def create_metric(self, metric):
+
+        """
+        :param metric: TheHive metric
+        :type metric: Metric defined in models.py
+        :return: TheHive metric
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/case_metrics"
+
+        data = {
+            "value": {
+                "name": metric.name,
+                "title": metric.title,
+                "description": metric.description,
+            }
+        }
+
+        try:
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies,
+                                     auth=self.auth, verify=self.cert)
+            json_response = response.json()
+
+            if response.status_code == 200 and len(json_response) > 0:
+                return response.json()
+            else:
+                sys.exit("Error: {}".format("Unable to create metric."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+    def delete_metric(self, metricId):
+
+        """
+        :param metricId: Metric Id to delete
+        :return: response
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/{}".format(metricId)
+
+        try:
+            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 200 or response.status_code == 204:
+                return True
+            else:
+                sys.exit("Error: {}".format("Error when attempting to remove metric."))
+
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
 
     def create_alert(self, alert):
 
@@ -374,6 +567,6 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise TheHiveException("Analyzer run error: {}".format(e))
 
-
+# TODO Add method for create_observable_datatype - POST, URI: /api/list/list_artifactDataType, JSON: {"value":"test-type"}
 # - addObservable(file)
 # - addObservable(data)
