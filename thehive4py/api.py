@@ -14,6 +14,7 @@ from requests.auth import AuthBase
 
 from thehive4py.models import CaseHelper
 from thehive4py.query import *
+from thehive4py.exceptions import *
 
 
 class BearerAuth(AuthBase):
@@ -80,7 +81,7 @@ class TheHiveApi:
         try:
             return requests.post(req, params=params, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise TheHiveException("Error: {}".format(e))
 
     def create_case(self, case):
 
@@ -96,7 +97,28 @@ class TheHiveApi:
         try:
             return requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CaseException("Case create error: {}".format(e))
+
+    def update_case(self, case):
+        """
+        Update a case.
+        :param case: The case to update. The case's `id` determines which case to update.
+        :return:
+        """
+        req = self.url + "/api/case/{}".format(case['id'])
+
+        # Choose which attributes to send
+        update_keys = [
+            'title', 'description', 'severity', 'startDate', 'owner', 'flag', 'tlp', 'tags', 'resolutionStatus',
+            'impactStatus', 'summary', 'endDate', 'metrics', 'status', 'customFields', 'metrics'
+        ]
+        # data = {k: v for k, v in case.__dict__.items() if k in update_keys}
+        data = {k: v for k, v in case.iteritems() if k in update_keys}
+
+        try:
+            return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+        except requests.exceptions.RequestExceptiona as e:
+            raise CaseException("Case update error: {}".format(e))
 
     def update_case(self, case):
         """
@@ -136,7 +158,28 @@ class TheHiveApi:
         try:
             return requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CaseTaskException("Case task create error: {}".format(e))
+
+    def update_case_task(self, task_id, task):
+        """
+        :Updates TheHive Task
+        :param case: The task to update. The task's `id` determines which Task to update.
+        :return:
+        """
+        req = self.url + "/api/case/task/{}".format(task_id)
+
+        # Choose which attributes to send
+        update_keys = [
+            'title', 'description', 'status', 'order', 'user', 'owner', 'flag', 'endDate'
+        ]
+
+        data = {k: v for k, v in task.__dict__.items() if k in update_keys}
+
+        try:
+            return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data,
+                                  proxies=self.proxies, auth=self.auth, verify=self.cert)
+        except requests.exceptions.RequestException as e:
+            raise CaseTaskException("Case task update error: {}".format(e))
 
     def update_case_task(self, task_id, task):
         """
@@ -177,13 +220,12 @@ class TheHiveApi:
             try:
                 return requests.post(req, data=data,files=f, proxies=self.proxies, auth=self.auth, verify=self.cert)
             except requests.exceptions.RequestException as e:
-                sys.exit("Error: {}".format(e))
-
+                raise CaseTaskException("Case task log create error: {}".format(e))
         else:
             try:
                 return requests.post(req, headers={'Content-Type': 'application/json'}, data=json.dumps({'message':case_task_log.message}), proxies=self.proxies, auth=self.auth, verify=self.cert)
             except requests.exceptions.RequestException as e:
-                sys.exit("Error: {}".format(e))
+                raise CaseTaskException("Case task log create error: {}".format(e))
 
     def create_case_observable(self, case_id, case_observable):
 
@@ -208,12 +250,12 @@ class TheHiveApi:
                 data = {"_json": mesg}
                 return requests.post(req, data=data, files=case_observable.data[0], proxies=self.proxies, auth=self.auth, verify=self.cert)
             except requests.exceptions.RequestException as e:
-                sys.exit("Error: {}".format(e))
+                raise CaseObservableException("Case observable create error: {}".format(e))
         else:
             try:
                 return requests.post(req, headers={'Content-Type': 'application/json'}, data=case_observable.jsonify(), proxies=self.proxies, auth=self.auth, verify=self.cert)
             except requests.exceptions.RequestException as e:
-                sys.exit("Error: {}".format(e))
+                raise CaseObservableException("Case observable create error: {}".format(e))
 
     def get_case(self, case_id):
         """
@@ -226,7 +268,7 @@ class TheHiveApi:
         try:
             return requests.get(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CaseException("Case fetch error: {}".format(e))
 
     def find_cases(self, **attributes):
         return self.__find_rows("/api/case/_search", **attributes)
@@ -270,7 +312,7 @@ class TheHiveApi:
         try:
             return requests.post(req, params=params, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CaseObservableException("Case observables search error: {}".format(e))
 
     def get_case_tasks(self, case_id, **attributes):
         req = self.url + "/api/case/task/_search"
@@ -297,7 +339,7 @@ class TheHiveApi:
         try:
             return requests.post(req, params=params, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CaseTaskException("Case tasks search error: {}".format(e))
 
     def get_case_template(self, name):
 
@@ -320,7 +362,50 @@ class TheHiveApi:
             if response.status_code == 200 and len(json_response) > 0:
                 return response.json()[0]
             else:
-                sys.exit("Error: {}".format("Unable to find case templates"))
+                raise CaseTemplateException("Case template fetch error: Unable to find case template {}".format(name))
+        except requests.exceptions.RequestException as e:
+            raise CaseTemplateException("Case template fetch error: {}".format(e))
+
+    def create_case_template(self, case_template):
+
+        """
+        :param case_template: TheHive Case Template
+        :return: TheHive case template Id
+        :rtype: string
+
+        """
+
+        req = self.url + "/api/case/template"
+        data = case_template.jsonify()
+
+        try:
+            response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+            json_response = response.json()
+
+            if response.status_code == 201 and len(json_response) > 0:
+                return json_response
+            else:
+                sys.exit("Error: {}".format("Unable to create the case template"))
+        except requests.exceptions.RequestException as e:
+            sys.exit("Error: {}".format(e))
+
+    def delete_case_template(self, caseId):
+
+        """
+        :param fieldId: Case template Id to delete
+        :rtype: bool
+        """
+
+        req = self.url + "/api/case/template/{}".format(caseId)
+
+        try:
+            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 200 or response.status_code == 204:
+                return True
+            else:
+                sys.exit("Error: {}".format("Error when attempting to delete case template."))
+
         except requests.exceptions.RequestException as e:
             sys.exit("Error: {}".format(e))
 
@@ -380,8 +465,8 @@ class TheHiveApi:
         try:
             return requests.get(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
-    
+            raise CaseTaskException("Case task logs search error: {}".format(e))
+
     def create_custom_field(self, custom_field):
 
         """
@@ -524,7 +609,7 @@ class TheHiveApi:
         try:
             return requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise AlertException("Alert create error: {}".format(e))
 
     def get_alert(self, alert_id):
         """
@@ -537,7 +622,7 @@ class TheHiveApi:
         try:
             return requests.get(req, proxies=self.proxies, auth=self.auth,verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise AlertException("Alert fetch error: {}".format(e))
 
     def find_alerts(self, **attributes):
         """
@@ -559,14 +644,14 @@ class TheHiveApi:
         req = self.url + "/api/connector/cortex/job"
 
         try:
-            data = json.dumps({ "cortexId": cortex_id, 
-                "artifactId": artifact_id, 
+            data = json.dumps({ "cortexId": cortex_id,
+                "artifactId": artifact_id,
                 "analyzerId": analyzer_id
                 })
             return requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
-        
+            raise TheHiveException("Analyzer run error: {}".format(e))
 
+# TODO Add method for create_observable_datatype - POST, URI: /api/list/list_artifactDataType, JSON: {"value":"test-type"}
 # - addObservable(file)
 # - addObservable(data)
