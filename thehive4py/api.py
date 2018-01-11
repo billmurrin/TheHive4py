@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
 import sys
-
-import magic
 import os
-import warnings
 import json
 import magic
 import requests
@@ -120,27 +116,6 @@ class TheHiveApi:
         except requests.exceptions.RequestExceptiona as e:
             raise CaseException("Case update error: {}".format(e))
 
-    def update_case(self, case):
-        """
-        Update a case.
-        :param case: The case to update. The case's `id` determines which case to update.
-        :return:
-        """
-        req = self.url + "/api/case/{}".format(case['id'])
-
-        # Choose which attributes to send
-        update_keys = [
-            'title', 'description', 'severity', 'startDate', 'owner', 'flag', 'tlp', 'tags', 'resolutionStatus',
-            'impactStatus', 'summary', 'endDate', 'metrics', 'status', 'customFields', 'metrics'
-        ]
-        # data = {k: v for k, v in case.__dict__.items() if k in update_keys}
-        data = {k: v for k, v in case.iteritems() if k in update_keys}
-
-        try:
-            return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
-        except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
-
     def create_case_task(self, case_id, case_task):
 
         """
@@ -180,27 +155,6 @@ class TheHiveApi:
                                   proxies=self.proxies, auth=self.auth, verify=self.cert)
         except requests.exceptions.RequestException as e:
             raise CaseTaskException("Case task update error: {}".format(e))
-
-    def update_case_task(self, task_id, task):
-        """
-        :Updates TheHive Task
-        :param case: The task to update. The task's `id` determines which Task to update.
-        :return:
-        """
-        req = self.url + "/api/case/task/{}".format(task_id)
-
-        # Choose which attributes to send
-        update_keys = [
-            'title', 'description', 'status', 'order', 'user', 'owner', 'flag', 'endDate'
-        ]
-
-        data = {k: v for k, v in task.__dict__.items() if k in update_keys}
-
-        try:
-            return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data,
-                                  proxies=self.proxies, auth=self.auth, verify=self.cert)
-        except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
 
     def create_task_log(self, task_id, case_task_log):
 
@@ -365,49 +319,6 @@ class TheHiveApi:
                 raise CaseTemplateException("Case template fetch error: Unable to find case template {}".format(name))
         except requests.exceptions.RequestException as e:
             raise CaseTemplateException("Case template fetch error: {}".format(e))
-
-    def create_case_template(self, case_template):
-
-        """
-        :param case_template: TheHive Case Template
-        :return: TheHive case template Id
-        :rtype: string
-
-        """
-
-        req = self.url + "/api/case/template"
-        data = case_template.jsonify()
-
-        try:
-            response = requests.post(req, headers={'Content-Type': 'application/json'}, data=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
-            json_response = response.json()
-
-            if response.status_code == 201 and len(json_response) > 0:
-                return json_response
-            else:
-                sys.exit("Error: {}".format("Unable to create the case template"))
-        except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
-
-    def delete_case_template(self, caseId):
-
-        """
-        :param fieldId: Case template Id to delete
-        :rtype: bool
-        """
-
-        req = self.url + "/api/case/template/{}".format(caseId)
-
-        try:
-            response = requests.delete(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
-
-            if response.status_code == 200 or response.status_code == 204:
-                return True
-            else:
-                sys.exit("Error: {}".format("Error when attempting to delete case template."))
-
-        except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
 
     def create_case_template(self, case_template):
 
