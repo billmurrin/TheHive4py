@@ -490,13 +490,14 @@ class TheHiveApi:
             if response.status_code == 200 and len(json_response) > 0:
                 exists = response.json()
             else:
-                sys.exit("Error: {}".format("Unable to determine if custom field exists."))
+                raise CustomFieldException("CustomField creation error: Unable to determine if custom field exists.")
 
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CustomFieldException("CustomField creation error: {}".format(e))
 
         if exists['found']:
-            sys.exit("Cannot create custom field. The custom field reference already exists.")
+            raise CustomFieldException("CustomField creation error: Cannot create custom field. "
+                                       "The custom field reference already exists.")
         else:
             req = self.url + "/api/list/custom_fields"
 
@@ -517,10 +518,10 @@ class TheHiveApi:
                 if response.status_code == 200 and len(json_response) > 0:
                     return response.json()
                 else:
-                    sys.exit("Error: {}".format("Unable to create custom field."))
+                    raise CustomFieldException("CustomField creation error: Unable to create custom field.")
 
             except requests.exceptions.RequestException as e:
-                sys.exit("Error: {}".format(e))
+                raise CustomFieldException("CustomField creation error: {}".format(e))
 
     def delete_custom_field(self, fieldId):
 
@@ -537,10 +538,10 @@ class TheHiveApi:
             if response.status_code == 200 or response.status_code == 204:
                 return True
             else:
-                sys.exit("Error: {}".format("Error when attempting to remove custom field."))
+                raise CustomFieldException("CustomField deletion error: Error when attempting to remove custom field.")
 
         except requests.exceptions.RequestException as e:
-            sys.exit("Error: {}".format(e))
+            raise CustomFieldException("CustomField deletion error: {}".format(e))
 
     def create_metric(self, metric):
 

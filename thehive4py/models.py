@@ -46,7 +46,6 @@ class CustomFieldHelper(object):
         custom_field['options'] = value
         custom_field['reference'] = reference
         custom_field['description'] = description
-
         return custom_field
 
     def __add_field(self, type, name, value):
