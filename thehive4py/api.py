@@ -135,13 +135,13 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise CaseTaskException("Case task create error: {}".format(e))
 
-    def update_case_task(self, task_id, task):
+    def update_case_task(self, task):
         """
         :Updates TheHive Task
         :param case: The task to update. The task's `id` determines which Task to update.
         :return:
         """
-        req = self.url + "/api/case/task/{}".format(task_id)
+        req = self.url + "/api/case/task/{}".format(task.id)
 
         # Choose which attributes to send
         update_keys = [
