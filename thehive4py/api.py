@@ -577,6 +577,51 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise TheHiveException("Analyzer run error: {}".format(e))
 
+    def create_observable_datatype(self, data_type):
+
+        """
+        :param data_type: data type to create
+        :return: Data type uid
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/list_artifactDataType"
+
+        if data_type:
+            data = {"value": data_type}
+
+            try:
+                response = requests.post(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    raise CaseObservableException("Unable to create observable data type: {}".format(response))
+            except requests.exceptions.RequestException as e:
+                raise CaseObservableException("Unable to create observable data type: {}".format(e))
+        else:
+            raise CaseObservableException("Unable to create data type. No data type provided")
+
+    def delete_observable_datatype(self, type_id):
+
+        """
+        :param data_type: data type to create
+        :return: Data type uid
+        :rtype: json
+        """
+
+        req = self.url + "/api/list/{}".format(type_id)
+
+        try:
+            response = requests.delete(req, headers={'Content-Type': 'application/json'}, proxies=self.proxies, auth=self.auth, verify=self.cert)
+
+            if response.status_code == 204:
+                return True
+            else:
+                raise CaseObservableException("Unable to delete observable data type: {}".format(response))
+        except requests.exceptions.RequestException as e:
+            raise CaseObservableException("Unable to delete observable data type {}: {}".format(type_id, e))
+
 # TODO Add method for create_observable_datatype - POST, URI: /api/list/list_artifactDataType, JSON: {"value":"test-type"}
 # - addObservable(file)
 # - addObservable(data)
