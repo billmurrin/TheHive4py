@@ -674,6 +674,21 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise CaseObservableException("Unable to delete observable data type {}: {}".format(type_id, e))
 
+    def retrieve_datastore_content(self, content_id):
+        """
+            :param content_id: datastore content id
+            :return: content
+            :rtype: binary
+        """
+        req = self.url + "/api/datastore/{}".format(content_id)
+
+        try:
+            response = requests.get(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
+            if response.status_code == 200:
+                return response
+        except requests.exceptions.RequestException as e:
+            raise CaseException("Case fetch error: {}".format(e))
+
 # TODO Add method for create_observable_datatype - POST, URI: /api/list/list_artifactDataType, JSON: {"value":"test-type"}
 # - addObservable(file)
 # - addObservable(data)
