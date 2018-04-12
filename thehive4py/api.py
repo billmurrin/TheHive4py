@@ -629,6 +629,59 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise TheHiveException("Analyzer run error: {}".format(e))
 
+    def find_cortex_jobs(self, artifact_id, analyzer_id='', **attributes):
+
+        """
+        :param artifact_id: Artifact / Observable ID
+        :param analyzer_id: Analyzer ID (E.g. VirusTotal_GetReport_3_0)
+        :type caseArtifactJob:
+        :return: Cortex Jobs
+        :rtype: json
+        """
+
+        req = self.url + "/api/connector/cortex/job/_search"
+
+        # Add range and sort parameters
+        params = {
+            "range": attributes.get("range", "all"),
+            "sort": attributes.get("sort", [])
+        }
+
+        parent_criteria = Parent('case_artifact', Id(artifact_id))
+
+        analyzer = {
+            "analyzerId": analyzer_id
+        }
+
+        if analyzer_id:
+            criteria = And(parent_criteria, analyzer)
+        else:
+            criteria = parent_criteria
+
+        data = {
+            "query": criteria
+        }
+
+        try:
+            return requests.post(req, params=params, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+        except requests.exceptions.RequestException as e:
+            raise CaseException("Unable to query TheHive Cortex connector for jobs: {}".format(e))
+
+    def retrieve_cortex_job(self, job_id, artifact_id):
+
+        req = self.url + "/api/connector/cortex/job/{}".format(job_id)
+
+        parent_criteria = Parent('case_artifact', Id(artifact_id))
+
+        data = {
+            "query": parent_criteria
+        }
+
+        try:
+            return requests.get(req, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
+        except requests.exceptions.RequestException as e:
+            raise CaseException("Unable to retrieve Cortex job: {}".format(e))
+
     def create_observable_datatype(self, data_type):
 
         """
