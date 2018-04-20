@@ -727,13 +727,16 @@ class TheHiveApi:
         except requests.exceptions.RequestException as e:
             raise CaseObservableException("Unable to delete observable data type {}: {}".format(type_id, e))
 
-    def retrieve_datastore_content(self, content_id):
+    def retrieve_datastore_content(self, content_id, zip=False):
         """
             :param content_id: datastore content id
             :return: content
             :rtype: binary
         """
-        req = self.url + "/api/datastore/{}".format(content_id)
+        if zip:
+            req = self.url + "/api/datastorezip/{}".format(content_id, zip=False)
+        else:
+            req = self.url + "/api/datastore/{}".format(content_id, zip=False)
 
         try:
             response = requests.get(req, proxies=self.proxies, auth=self.auth, verify=self.cert)
