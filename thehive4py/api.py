@@ -154,7 +154,7 @@ class TheHiveApi:
 
         # Choose which attributes to send
         update_keys = [
-            'title', 'description', 'status', 'order', 'user', 'owner', 'flag', 'endDate'
+            'title', 'description', 'status', 'order', 'user', 'owner', 'flag', 'startDate', 'endDate'
         ]
 
         data = {k: v for k, v in task.__dict__.items() if k in update_keys}
