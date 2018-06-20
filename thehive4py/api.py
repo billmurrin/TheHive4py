@@ -122,7 +122,7 @@ class TheHiveApi:
 
         try:
             return requests.patch(req, headers={'Content-Type': 'application/json'}, json=data, proxies=self.proxies, auth=self.auth, verify=self.cert)
-        except requests.exceptions.RequestExceptiona as e:
+        except requests.exceptions.RequestException as e:
             raise CaseException("Case update error: {}".format(e))
 
     def create_case_task(self, case_id, case_task):
